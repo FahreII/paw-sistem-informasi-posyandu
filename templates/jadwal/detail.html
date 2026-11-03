@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% block title %}Detail Jadwal{% endblock %}
+
+{% block content %}
+<a href="{{ url_for('daftar_jadwal') }}" class="btn btn-link px-0 mb-2">&larr; Kembali ke Jadwal Kegiatan</a>
+
+<div class="card shadow-sm mb-4">
+    <div class="card-header fw-semibold">Detail Jadwal Kegiatan</div>
+    <div class="card-body">
+        <h3>{{ jadwal.lokasi }}</h3>
+        <table class="table table-borderless table-sm mb-0">
+            <tr><th style="width:25%">ID Jadwal</th><td>{{ jadwal.id_jadwal }}</td></tr>
+            <tr><th>Tanggal Kegiatan</th><td>{{ jadwal.tanggal_kegiatan | tanggal }}</td></tr>
+            <tr><th>Keterangan</th><td>{{ jadwal.keterangan_jadwal or '-' }}</td></tr>
+            <tr><th>Penanggung Jawab</th>
+                <td>
+                    {% if jadwal.id_user %}
+                    <a href="{{ url_for('detail_petugas', id_user=jadwal.id_user) }}">{{ jadwal.nama_petugas }}</a>
+                    {% if jadwal.hp_petugas %}<small class="text-muted">({{ jadwal.hp_petugas }})</small>{% endif %}
+                    {% else %}-{% endif %}
+                </td></tr>
+        </table>
+    </div>
+</div>
+
+<h4 class="mb-3">Balita yang Diperiksa ({{ pemeriksaan | length }})</h4>
+<div class="table-responsive">
+    <table class="table table-hover align-middle bg-white shadow-sm">
+        <thead class="table-head">
+            <tr><th>No</th><th>Nama Balita</th><th>BB (kg)</th><th>TB (cm)</th><th>Status Gizi</th><th></th></tr>
+        </thead>
+        <tbody>
+            {% for p in pemeriksaan %}
+            <tr>
+                <td>{{ loop.index }}</td>
+                <td>{{ p.nama_balita or '-' }}</td>
+                <td>{{ p.berat_badan }}</td>
+                <td>{{ p.tinggi_badan }}</td>
+                <td><span class="badge bg-{{ p.status_gizi | warna_gizi }}">{{ p.status_gizi }}</span></td>
+                <td><a href="{{ url_for('detail_pemeriksaan', id_pemeriksaan=p.id_pemeriksaan_balita) }}" class="btn btn-sm btn-outline-primary">Detail</a></td>
+            </tr>
+            {% else %}
+            <tr><td colspan="6" class="text-center text-muted py-4">Belum ada pemeriksaan pada jadwal ini.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

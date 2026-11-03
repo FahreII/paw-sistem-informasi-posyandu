@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+{% block title %}{{ balita.nama_balita }}{% endblock %}
+
+{% block content %}
+<a href="{{ url_for('daftar_balita') }}" class="btn btn-link px-0 mb-2">&larr; Kembali ke Data Balita</a>
+
+<div class="row g-4">
+    <div class="col-md-6">
+        <div class="card h-100 shadow-sm">
+            <div class="card-header fw-semibold">Profil Balita</div>
+            <div class="card-body">
+                <h3>{{ balita.nama_balita }}</h3>
+                <table class="table table-borderless table-sm mb-0">
+                    <tr><th style="width:40%">ID Balita</th><td>{{ balita.id_balita }}</td></tr>
+                    <tr><th>Jenis Kelamin</th><td>{{ balita.jenis_kelamin }}</td></tr>
+                    <tr><th>Tanggal Lahir</th><td>{{ balita.tanggal_lahir | tanggal }}</td></tr>
+                    <tr><th>Umur</th><td>{{ balita.tanggal_lahir | umur }}</td></tr>
+                </table>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card h-100 shadow-sm">
+            <div class="card-header fw-semibold">Data Orang Tua</div>
+            <div class="card-body">
+                {% if balita.nama_ibu %}
+                <table class="table table-borderless table-sm mb-2">
+                    <tr><th style="width:40%">Nama Ibu</th><td>{{ balita.nama_ibu }}</td></tr>
+                    <tr><th>Alamat</th><td>{{ balita.alamat }}</td></tr>
+                    <tr><th>No. HP</th><td>{{ balita.no_hp }}</td></tr>
+                </table>
+                <a href="{{ url_for('detail_orang_tua', id_orang_tua=balita.id_orang_tua) }}" class="btn btn-sm btn-outline-primary">Lihat Orang Tua</a>
+                {% else %}
+                <p class="text-muted mb-0">Data orang tua tidak tersedia.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<h4 class="mt-4 mb-3">Riwayat Pemeriksaan</h4>
+<div class="table-responsive">
+    <table class="table table-hover align-middle bg-white shadow-sm">
+        <thead class="table-head">
+            <tr>
+                <th>No</th>
+                <th>Tanggal</th>
+                <th>BB (kg)</th>
+                <th>TB (cm)</th>
+                <th>LK (cm)</th>
+                <th>LiLA (cm)</th>
+                <th>Status Gizi</th>
+                <th>Petugas</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for p in riwayat %}
+            <tr>
+                <td>{{ loop.index }}</td>
+                <td>{{ p.tanggal_periksa | tanggal }}</td>
+                <td>{{ p.berat_badan }}</td>
+                <td>{{ p.tinggi_badan }}</td>
+                <td>{{ p.lingkar_kepala }}</td>
+                <td>{{ p.lingkar_lengan }}</td>
+                <td><span class="badge bg-{{ p.status_gizi | warna_gizi }}">{{ p.status_gizi }}</span></td>
+                <td>{{ p.nama_petugas or '-' }}</td>
+                <td><a href="{{ url_for('detail_pemeriksaan', id_pemeriksaan=p.id_pemeriksaan_balita) }}" class="btn btn-sm btn-outline-primary">Detail</a></td>
+            </tr>
+            {% else %}
+            <tr><td colspan="9" class="text-center text-muted py-4">Belum ada riwayat pemeriksaan.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

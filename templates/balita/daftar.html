@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+{% block title %}Data Balita{% endblock %}
+{% block page_heading %}Pemantauan{% endblock %}
+{% block page_subheading %}Data Balita{% if usia == '0-2' %} (0-2 Tahun){% elif usia == '2-6' %} (Sasaran PAUD 2-6 Tahun){% endif %}{% endblock %}
+{% block breadcrumb %}Data Balita{% endblock %}
+
+{% block content %}
+<div class="main-box-toolbar justify-content-between">
+    <h6 class="mb-0 fw-bold"><i class="fa-solid fa-child-reaching text-info me-2"></i> Daftar Data Balita</h6>
+    <div class="d-flex gap-1 flex-wrap">
+        <a href="{{ url_for('daftar_balita') }}" class="btn btn-sm {% if not jk %}btn-primary{% else %}btn-outline-secondary{% endif %}">Semua</a>
+        <a href="{{ url_for('daftar_balita', jk='Laki-laki') }}" class="btn btn-sm {% if jk == 'Laki-laki' %}btn-primary{% else %}btn-outline-secondary{% endif %}">Laki-laki</a>
+        <a href="{{ url_for('daftar_balita', jk='Perempuan') }}" class="btn btn-sm {% if jk == 'Perempuan' %}btn-primary{% else %}btn-outline-secondary{% endif %}">Perempuan</a>
+    </div>
+</div>
+
+<form method="get" class="dt-controls-row">
+    <div class="dt-length">
+        Tampilkan
+        <select id="dtLengthSelect">
+            <option value="10" selected>10</option>
+            <option value="25">25</option>
+            <option value="50">50</option>
+        </select>
+        entri
+    </div>
+    <div class="dt-search">
+        Cari:
+        <input type="text" name="q" id="liveTableSearch" value="{{ q }}" placeholder="Cari nama balita / ibu...">
+    </div>
+</form>
+
+<div class="table-responsive">
+    <table class="table-posyandu">
+        <thead>
+            <tr>
+                <th style="width: 48px;" class="text-center">NO</th>
+                <th style="width: 90px;" class="text-center">AKSI</th>
+                <th>NAMA BALITA <i class="fa-solid fa-arrow-down-a-z sort-icon"></i></th>
+                <th>JENIS KELAMIN <i class="fa-solid fa-sort sort-icon"></i></th>
+                <th>TANGGAL LAHIR <i class="fa-solid fa-sort sort-icon"></i></th>
+                <th>UMUR <i class="fa-solid fa-sort sort-icon"></i></th>
+                <th>NAMA IBU (KIA) <i class="fa-solid fa-sort sort-icon"></i></th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for b in data %}
+            <tr class="data-row">
+                <td class="text-center">{{ loop.index }}</td>
+                <td class="text-center">
+                    <a href="{{ url_for('detail_balita', id_balita=b.id_balita) }}" class="btn-aksi btn-aksi-detail px-2 w-auto" title="Lihat Detail Balita">
+                        <i class="fa-solid fa-eye me-1"></i> Detail
+                    </a>
+                </td>
+                <td class="fw-semibold">{{ b.nama_balita }}</td>
+                <td>
+                    {% if b.jenis_kelamin == 'Laki-laki' %}
+                        <span class="badge bg-primary">Laki-laki</span>
+                    {% else %}
+                        <span class="badge bg-pink">Perempuan</span>
+                    {% endif %}
+                </td>
+                <td>{{ b.tanggal_lahir | tanggal }}</td>
+                <td>{{ b.tanggal_lahir | umur }}</td>
+                <td>{{ b.nama_ibu or '-' }}</td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="7" class="text-center text-muted py-4">Data balita tidak ditemukan.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<div class="dt-footer-row">
+    <div>
+        Menampilkan 1 sampai <span id="dtShowingCount">{{ data | length }}</span> dari {{ data | length }} entri
+    </div>
+    <div class="dt-pagination">
+        <span>Sebelumnya</span>
+        <span class="active-page">1</span>
+        <span>Selanjutnya</span>
+    </div>
+</div>
+{% endblock %}

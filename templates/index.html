@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+{% block title %}Stunting Posyandu{% endblock %}
+{% block page_heading %}Stunting{% endblock %}
+{% block page_subheading %}Posyandu{% endblock %}
+{% block breadcrumb %}Posyandu{% endblock %}
+
+{% block content %}
+<div class="main-box-toolbar justify-content-between">
+    <h6 class="mb-0 fw-bold"><i class="fa-solid fa-hospital text-info me-2"></i> Daftar Posyandu &amp; Jadwal Layanan</h6>
+    {% if q %}
+    <a href="{{ url_for('beranda') }}" class="btn btn-sm btn-outline-secondary">Reset Pencarian</a>
+    {% endif %}
+</div>
+
+<!-- Baris kontrol Tampilkan entri & Cari -->
+<form method="get" class="dt-controls-row">
+    <div class="dt-length">
+        Tampilkan
+        <select id="dtLengthSelect">
+            <option value="10" selected>10</option>
+            <option value="25">25</option>
+            <option value="50">50</option>
+        </select>
+        entri
+    </div>
+    <div class="dt-search">
+        Cari:
+        <input type="text" name="q" id="liveTableSearch" value="{{ q }}" placeholder="Ketik kata kunci...">
+    </div>
+</form>
+
+<!-- Tabel Data Posyandu (READ ONLY) -->
+<div class="table-responsive">
+    <table class="table-posyandu">
+        <thead>
+            <tr>
+                <th style="width: 48px;" class="text-center">NO</th>
+                <th style="width: 90px;" class="text-center">AKSI</th>
+                <th>NAMA POSYANDU <i class="fa-solid fa-arrow-down-a-z sort-icon"></i></th>
+                <th>KEGIATAN / KETERANGAN <i class="fa-solid fa-sort sort-icon"></i></th>
+                <th>TANGGAL <i class="fa-solid fa-sort sort-icon"></i></th>
+                <th>KADER PENANGGUNG JAWAB <i class="fa-solid fa-sort sort-icon"></i></th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for j in data %}
+            <tr class="data-row">
+                <td class="text-center">{{ loop.index }}</td>
+                <td class="text-center">
+                    <a href="{{ url_for('detail_jadwal', id_jadwal=j.id_jadwal) }}" class="btn-aksi btn-aksi-detail px-2 w-auto" title="Lihat Detail">
+                        <i class="fa-solid fa-eye me-1"></i> Detail
+                    </a>
+                </td>
+                <td class="fw-semibold">{{ j.lokasi }}</td>
+                <td>{{ j.keterangan_jadwal or '-' }}</td>
+                <td>{{ j.tanggal_kegiatan | tanggal }}</td>
+                <td>{{ j.nama_petugas or '-' }}</td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="6" class="text-center text-muted py-4">Belum ada data posyandu.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<!-- Baris Footer & Pagination -->
+<div class="dt-footer-row">
+    <div>
+        Menampilkan 1 sampai <span id="dtShowingCount">{{ data | length }}</span> dari {{ data | length }} entri
+    </div>
+    <div class="dt-pagination">
+        <span>Sebelumnya</span>
+        <span class="active-page">1</span>
+        <span>Selanjutnya</span>
+    </div>
+</div>
+{% endblock %}

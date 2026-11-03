@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block title %}{{ petugas.nama }}{% endblock %}
+
+{% block content %}
+<a href="{{ url_for('daftar_petugas') }}" class="btn btn-link px-0 mb-2">&larr; Kembali ke Data Petugas</a>
+
+<div class="card shadow-sm mb-4">
+    <div class="card-header fw-semibold">Detail Petugas</div>
+    <div class="card-body">
+        <h3>{{ petugas.nama }}</h3>
+        <table class="table table-borderless table-sm mb-0">
+            <tr><th style="width:25%">ID User</th><td>{{ petugas.id_user }}</td></tr>
+            <tr><th>Username</th><td>{{ petugas.username }}</td></tr>
+            <tr><th>Peran</th><td>{{ petugas.peran }}</td></tr>
+            <tr><th>No. HP</th><td>{{ petugas.no_hp or '-' }}</td></tr>
+            <tr><th>Total Pemeriksaan</th><td>{{ jumlah_periksa }} kali</td></tr>
+        </table>
+    </div>
+</div>
+
+<h4 class="mb-3">Jadwal yang Ditangani ({{ jadwal | length }})</h4>
+<div class="list-group">
+    {% for j in jadwal %}
+    <a href="{{ url_for('detail_jadwal', id_jadwal=j.id_jadwal) }}" class="list-group-item list-group-item-action">
+        <strong>{{ j.tanggal_kegiatan | tanggal }}</strong> &mdash; {{ j.lokasi }}
+        <small class="text-muted">({{ j.keterangan_jadwal or '-' }})</small>
+    </a>
+    {% else %}
+    <div class="list-group-item text-muted">Belum menangani jadwal kegiatan.</div>
+    {% endfor %}
+</div>
+{% endblock %}

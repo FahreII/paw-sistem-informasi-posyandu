@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block title %}Halo {{ nama }}{% endblock %}
+
+{% block content %}
+<div class="text-center py-5">
+    <h1 class="display-5">Halo, {{ nama | title }}!</h1>
+    <p class="lead">Ini adalah contoh <strong>route dinamis</strong> yang menerima parameter dari URL.</p>
+    {% if nama | length > 10 %}
+        <p class="text-muted">Nama Anda cukup panjang ({{ nama | length }} karakter).</p>
+    {% else %}
+        <p class="text-muted">Coba ganti nama di URL, misalnya <code>/halo/budi</code>.</p>
+    {% endif %}
+    <a href="{{ url_for('beranda') }}" class="btn btn-primary">Kembali ke Beranda</a>
+</div>
+{% endblock %}

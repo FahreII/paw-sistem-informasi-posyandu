@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+{% block title %}Data Kader Posyandu{% endblock %}
+{% block page_heading %}Kader Posyandu{% endblock %}
+{% block page_subheading %}Data Petugas (5 Orang){% endblock %}
+{% block breadcrumb %}Kader Posyandu{% endblock %}
+
+{% block content %}
+<div class="main-box-toolbar justify-content-between">
+    <h6 class="mb-0 fw-bold"><i class="fa-solid fa-user-nurse text-info me-2"></i> Daftar Petugas / Kader Posyandu</h6>
+    {% if q %}
+    <a href="{{ url_for('daftar_petugas') }}" class="btn btn-sm btn-outline-secondary">Reset Pencarian</a>
+    {% endif %}
+</div>
+
+<form method="get" class="dt-controls-row">
+    <div class="dt-length">
+        Tampilkan
+        <select id="dtLengthSelect">
+            <option value="10" selected>10</option>
+            <option value="25">25</option>
+            <option value="50">50</option>
+        </select>
+        entri
+    </div>
+    <div class="dt-search">
+        Cari:
+        <input type="text" name="q" id="liveTableSearch" value="{{ q }}" placeholder="Cari nama / peran kader...">
+    </div>
+</form>
+
+<div class="table-responsive">
+    <table class="table-posyandu">
+        <thead>
+            <tr>
+                <th style="width: 48px;" class="text-center">NO</th>
+                <th style="width: 90px;" class="text-center">AKSI</th>
+                <th>NAMA KADER / PETUGAS <i class="fa-solid fa-arrow-down-a-z sort-icon"></i></th>
+                <th>USERNAME <i class="fa-solid fa-sort sort-icon"></i></th>
+                <th>PERAN JABATAN <i class="fa-solid fa-sort sort-icon"></i></th>
+                <th>NO. HP <i class="fa-solid fa-sort sort-icon"></i></th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for u in data %}
+            <tr class="data-row">
+                <td class="text-center">{{ loop.index }}</td>
+                <td class="text-center">
+                    <a href="{{ url_for('detail_petugas', id_user=u.id_user) }}" class="btn-aksi btn-aksi-detail px-2 w-auto" title="Lihat Detail Kader">
+                        <i class="fa-solid fa-eye me-1"></i> Detail
+                    </a>
+                </td>
+                <td class="fw-semibold">{{ u.nama }}</td>
+                <td><code>{{ u.username }}</code></td>
+                <td>
+                    {% if 'Ketua' in u.peran %}
+                        <span class="badge bg-warning text-dark">{{ u.peran }}</span>
+                    {% else %}
+                        <span class="badge bg-info text-dark">{{ u.peran }}</span>
+                    {% endif %}
+                </td>
+                <td>{{ u.no_hp or '-' }}</td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="6" class="text-center text-muted py-4">Belum ada data petugas.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<div class="dt-footer-row">
+    <div>
+        Menampilkan 1 sampai <span id="dtShowingCount">{{ data | length }}</span> dari {{ data | length }} entri
+    </div>
+    <div class="dt-pagination">
+        <span>Sebelumnya</span>
+        <span class="active-page">1</span>
+        <span>Selanjutnya</span>
+    </div>
+</div>
+{% endblock %}

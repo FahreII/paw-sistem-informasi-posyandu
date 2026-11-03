@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block title %}{{ orang_tua.nama_ibu }}{% endblock %}
+
+{% block content %}
+<a href="{{ url_for('daftar_orang_tua') }}" class="btn btn-link px-0 mb-2">&larr; Kembali ke Data Orang Tua</a>
+
+<div class="card shadow-sm mb-4">
+    <div class="card-header fw-semibold">Detail Orang Tua</div>
+    <div class="card-body">
+        <h3>{{ orang_tua.nama_ibu }}</h3>
+        <table class="table table-borderless table-sm mb-0">
+            <tr><th style="width:25%">ID Orang Tua</th><td>{{ orang_tua.id_orang_tua }}</td></tr>
+            <tr><th>Alamat</th><td>{{ orang_tua.alamat }}</td></tr>
+            <tr><th>No. HP</th><td>{{ orang_tua.no_hp }}</td></tr>
+        </table>
+    </div>
+</div>
+
+<h4 class="mb-3">Daftar Anak ({{ anak | length }})</h4>
+{% if anak %}
+<div class="row g-3">
+    {% for b in anak %}
+    <div class="col-md-4">
+        <div class="card h-100 shadow-sm">
+            <div class="card-body">
+                <h5 class="card-title">{{ b.nama_balita }}</h5>
+                <p class="card-text mb-1">{{ b.jenis_kelamin }}</p>
+                <p class="card-text text-muted small">
+                    Lahir {{ b.tanggal_lahir | tanggal }} ({{ b.tanggal_lahir | umur }})
+                </p>
+                <a href="{{ url_for('detail_balita', id_balita=b.id_balita) }}" class="btn btn-sm btn-outline-primary">Detail Balita</a>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<p class="text-muted">Belum ada data anak untuk orang tua ini.</p>
+{% endif %}
+{% endblock %}

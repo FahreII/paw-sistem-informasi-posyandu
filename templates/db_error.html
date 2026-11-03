@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block title %}Kesalahan Database{% endblock %}
+
+{% block content %}
+<div class="py-5">
+    <h3 class="text-danger">Terjadi kesalahan pada database</h3>
+    <p>Periksa hal-hal berikut:</p>
+    <ol>
+        <li>MySQL pada XAMPP Control Panel sudah dalam keadaan <strong>Running</strong>.</li>
+        <li>Database <code>{{ config.MYSQL_DB }}</code> sudah dibuat dan file SQL sudah di-import.</li>
+        <li>Username / password di <code>config.py</code> sudah sesuai.</li>
+    </ol>
+    <div class="alert alert-secondary small"><strong>Detail:</strong> {{ pesan }}</div>
+    <a href="{{ url_for('beranda') }}" class="btn btn-primary">Kembali ke Beranda</a>
+</div>
+{% endblock %}

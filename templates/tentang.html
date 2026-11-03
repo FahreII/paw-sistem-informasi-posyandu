@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block title %}Info Posyandu & Kelompok{% endblock %}
+{% block page_heading %}Info Posyandu{% endblock %}
+{% block page_subheading %}Tentang Aplikasi &amp; Kelompok{% endblock %}
+{% block breadcrumb %}Info Posyandu{% endblock %}
+
+{% block content %}
+<h5 class="fw-bold mb-2"><i class="fa-solid fa-hospital-user text-info me-2"></i> Tentang {{ config.APP_NAME }}</h5>
+<p class="text-muted">
+    <strong>{{ config.APP_NAME }}</strong> adalah aplikasi dashboard berbasis Flask &amp; MySQL untuk
+    memantau tumbuh kembang balita, mendata Kesehatan Ibu dan Anak (KIA), jadwal kegiatan posyandu,
+    serta rekapitulasi status gizi dan pencegahan stunting.
+</p>
+
+<div class="row g-3 mt-1">
+    <div class="col-md-7">
+        <div class="card h-100 border">
+            <div class="card-header fw-bold bg-light">Fitur Utama Sistem</div>
+            <ul class="list-group list-group-flush">
+                {% for f in fitur %}
+                <li class="list-group-item">{{ loop.index }}. {{ f }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+    <div class="col-md-5">
+        <div class="card h-100 border">
+            <div class="card-header fw-bold bg-light">Anggota Kelompok / Kader (5 Orang)</div>
+            <ul class="list-group list-group-flush">
+                {% for a in anggota %}
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                    <div>
+                        <div class="fw-semibold">{{ a.nama }}</div>
+                        <small class="text-muted">{{ a.no_hp or '' }}</small>
+                    </div>
+                    <span class="badge {% if 'Ketua' in (a.peran or '') %}bg-warning text-dark{% else %}bg-info text-dark{% endif %}">
+                        {{ a.peran or a.npm }}
+                    </span>
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+</div>
+{% endblock %}

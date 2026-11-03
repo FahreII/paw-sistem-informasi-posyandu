@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% block title %}Posyandu{% endblock %} | {{ config.APP_NAME }}</title>
+
+    <!-- Bootstrap 5 & FontAwesome 6 (CDN) -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <!-- CSS dari folder static (url_for) -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+
+<div class="admin-wrapper" id="adminWrapper">
+
+    <!-- ==================== LEFT DARK SIDEBAR ==================== -->
+    <aside class="admin-sidebar">
+        <a href="{{ url_for('beranda') }}" class="sidebar-brand">
+            <div class="brand-emblem">
+                <!-- Emblem Desa / Posyandu -->
+                <svg viewBox="0 0 48 54" width="38" height="42">
+                    <path d="M24 2 L44 10 V26 C44 39 35 48 24 52 C13 48 4 39 4 26 V10 Z"
+                          fill="#00a65a" stroke="#f39c12" stroke-width="3"/>
+                    <circle cx="24" cy="23" r="10" fill="#fff"/>
+                    <path d="M24 16 V30 M17 23 H31" stroke="#dd4b39" stroke-width="3.5" stroke-linecap="round"/>
+                </svg>
+            </div>
+            <div class="brand-text-wrap">
+                <span class="brand-title">Posyandu Paguyuban</span>
+                <span class="brand-sub">RW 02 &amp; RW 03</span>
+                <span class="brand-sub">Sistem Informasi Posyandu</span>
+            </div>
+        </a>
+
+        <div class="sidebar-section-header">MENU UTAMA</div>
+
+        <ul class="sidebar-menu">
+            <li class="{% if request.endpoint == 'beranda' %}active{% endif %}">
+                <a href="{{ url_for('beranda') }}">
+                    <span><i class="fa-solid fa-house menu-icon"></i> Home</span>
+                </a>
+            </li>
+            <li class="{% if request.endpoint == 'tentang' %}active{% endif %}">
+                <a href="{{ url_for('tentang') }}">
+                    <span><i class="fa-solid fa-circle-info menu-icon"></i> Info Posyandu</span>
+                </a>
+            </li>
+            <li class="{% if request.endpoint and 'orang_tua' in request.endpoint %}active{% endif %}">
+                <a href="{{ url_for('daftar_orang_tua') }}">
+                    <span><i class="fa-solid fa-people-roof menu-icon"></i> Kependudukan (KIA)</span>
+                </a>
+            </li>
+            <li class="{% if request.endpoint == 'scorecard' %}active{% endif %}">
+                <a href="{{ url_for('scorecard') }}">
+                    <span><i class="fa-solid fa-chart-line menu-icon"></i> Statistik &amp; Rekap</span>
+                </a>
+            </li>
+
+            <!-- Menu Kesehatan (Expanded) -->
+            <li class="active">
+                <a href="#submenuKesehatan" data-bs-toggle="collapse" aria-expanded="true">
+                    <span><i class="fa-solid fa-heart-pulse menu-icon" style="color:#00c0ef;"></i> Kesehatan</span>
+                    <i class="fa-solid fa-angle-down small"></i>
+                </a>
+                <ul class="sidebar-submenu collapse show" id="submenuKesehatan">
+                    <li class="{% if request.endpoint and 'balita' in request.endpoint %}active{% endif %}">
+                        <a href="{{ url_for('daftar_balita') }}">
+                            <i class="fa-solid fa-child-reaching menu-icon"></i> Pendataan Balita
+                        </a>
+                    </li>
+                    <li class="{% if request.endpoint and 'pemeriksaan' in request.endpoint %}active{% endif %}">
+                        <a href="{{ url_for('daftar_pemeriksaan') }}">
+                            <i class="fa-solid fa-check menu-icon"></i> Pemantauan Gizi
+                        </a>
+                    </li>
+                    <li class="{% if request.endpoint and 'jadwal' in request.endpoint %}active{% endif %}">
+                        <a href="{{ url_for('daftar_jadwal') }}">
+                            <i class="fa-solid fa-notes-medical menu-icon"></i> Vaksin &amp; Jadwal
+                        </a>
+                    </li>
+                    <li class="{% if request.endpoint == 'beranda' %}active{% endif %}">
+                        <a href="{{ url_for('beranda') }}">
+                            <i class="fa-solid fa-stethoscope menu-icon"></i> Stunting &amp; Posyandu
+                        </a>
+                    </li>
+                </ul>
+            </li>
+
+            <li class="{% if request.endpoint and 'petugas' in request.endpoint %}active{% endif %}">
+                <a href="{{ url_for('daftar_petugas') }}">
+                    <span><i class="fa-solid fa-user-nurse menu-icon"></i> Kader Posyandu</span>
+                </a>
+            </li>
+            <li>
+                <a href="{{ url_for('halo', nama='Kader Posyandu') }}">
+                    <span><i class="fa-solid fa-hand-holding-medical menu-icon"></i> Layanan Posyandu</span>
+                </a>
+            </li>
+        </ul>
+    </aside>
+
+    <!-- ==================== RIGHT MAIN CONTENT ==================== -->
+    <div class="admin-main">
+
+        <!-- Top Orange Banner -->
+        <header class="top-orange-bar">
+            <button type="button" class="sidebar-toggle-btn" id="btnToggleSidebar" title="Buka/Tutup Menu">
+                <i class="fa-solid fa-bars"></i>
+            </button>
+        </header>
+
+        <!-- Page Heading & Breadcrumb -->
+        <div class="content-header-bar">
+            <h1 class="content-header-title">
+                {% block page_heading %}Stunting{% endblock %}
+                <small>{% block page_subheading %}Posyandu{% endblock %}</small>
+            </h1>
+            <ol class="breadcrumb-custom">
+                <li><a href="{{ url_for('beranda') }}"><i class="fa-solid fa-house me-1"></i> Home</a></li>
+                <li>{% block breadcrumb %}Posyandu{% endblock %}</li>
+            </ol>
+        </div>
+
+        <!-- Main Dashboard Workspace -->
+        <div class="content-body">
+
+            <!-- ===== 4 COLORED SUMMARY BOXES ===== -->
+            <div class="row g-3 mb-3">
+                <div class="col-12 col-sm-6 col-xl-3">
+                    <a href="{{ url_for('daftar_pemeriksaan', status='Gizi Baik') }}" class="small-box bg-aqua">
+                        <div class="inner">
+                            <div class="stat-number">{{ stats_global.gizi_baik }}</div>
+                            <div class="stat-label">Balita Status Gizi Baik</div>
+                        </div>
+                        <div class="watermark-icon"><i class="fa-solid fa-location-dot"></i></div>
+                    </a>
+                </div>
+                <div class="col-12 col-sm-6 col-xl-3">
+                    <a href="{{ url_for('daftar_balita') }}" class="small-box bg-green">
+                        <div class="inner">
+                            <div class="stat-number">{{ stats_global.balita }}</div>
+                            <div class="stat-label">Anak Terdaftar Bulan Ini</div>
+                        </div>
+                        <div class="watermark-icon"><i class="fa-solid fa-chart-column"></i></div>
+                    </a>
+                </div>
+                <div class="col-12 col-sm-6 col-xl-3">
+                    <a href="{{ url_for('daftar_orang_tua') }}" class="small-box bg-yellow">
+                        <div class="inner">
+                            <div class="stat-number">{{ stats_global.orang_tua }}</div>
+                            <div class="stat-label">Total Ibu / Orang Tua (KIA)</div>
+                        </div>
+                        <div class="watermark-icon"><i class="fa-solid fa-person-dress"></i></div>
+                    </a>
+                </div>
+                <div class="col-12 col-sm-6 col-xl-3">
+                    <a href="{{ url_for('daftar_pemeriksaan') }}" class="small-box bg-red">
+                        <div class="inner">
+                            <div class="stat-number">{{ stats_global.pemeriksaan }}</div>
+                            <div class="stat-label">Total Periksa Anak</div>
+                        </div>
+                        <div class="watermark-icon"><i class="fa-solid fa-chart-pie"></i></div>
+                    </a>
+                </div>
+            </div>
+
+            <!-- ===== 2-COLUMN WORKSPACE (LEFT SUB-MENU + RIGHT CONTENT) ===== -->
+            <div class="row g-3">
+                <!-- Left Sub-Navigation Column -->
+                <div class="col-lg-3 col-md-4">
+
+                    <!-- Card 1: Posyandu & KIA -->
+                    <div class="subnav-box">
+                        <ul class="subnav-list">
+                            <li class="{% if active_sub in ['posyandu', 'jadwal'] %}active{% endif %}">
+                                <a href="{{ url_for('beranda') }}">
+                                    <span>Posyandu</span>
+                                    <span class="badge bg-light text-dark">{{ stats_global.jadwal }}</span>
+                                </a>
+                            </li>
+                            <li class="{% if active_sub == 'kia' %}active{% endif %}">
+                                <a href="{{ url_for('daftar_orang_tua') }}">
+                                    <span>Kesehatan Ibu dan Anak (KIA)</span>
+                                    <span class="badge bg-light text-dark">{{ stats_global.orang_tua }}</span>
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <!-- Card 2: Pemantauan -->
+                    <div class="subnav-box">
+                        <div class="subnav-box-header" data-bs-toggle="collapse" data-bs-target="#boxPemantauan">
+                            <span>Pemantauan</span>
+                            <i class="fa-solid fa-minus small text-muted"></i>
+                        </div>
+                        <ul class="subnav-list collapse show" id="boxPemantauan">
+                            <li class="{% if active_sub == 'balita' %}active{% endif %}">
+                                <a href="{{ url_for('daftar_balita') }}">
+                                    <span>Data Seluruh Balita</span>
+                                    <span class="badge bg-secondary">{{ stats_global.balita }}</span>
+                                </a>
+                            </li>
+                            <li class="{% if active_sub == 'balita_0-2' %}active{% endif %}">
+                                <a href="{{ url_for('daftar_balita', usia='0-2') }}">
+                                    <span>Bulanan Anak 0-2 Tahun</span>
+                                </a>
+                            </li>
+                            <li class="{% if active_sub == 'balita_2-6' %}active{% endif %}">
+                                <a href="{{ url_for('daftar_balita', usia='2-6') }}">
+                                    <span>Sasaran Paud Anak 2-6 tahun</span>
+                                </a>
+                            </li>
+                            <li class="{% if active_sub == 'pemeriksaan' %}active{% endif %}">
+                                <a href="{{ url_for('daftar_pemeriksaan') }}">
+                                    <span>Riwayat Pemeriksaan Balita</span>
+                                    <span class="badge bg-secondary">{{ stats_global.pemeriksaan }}</span>
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <!-- Card 3: Rekapitulasi -->
+                    <div class="subnav-box">
+                        <div class="subnav-box-header" data-bs-toggle="collapse" data-bs-target="#boxRekap">
+                            <span>Rekapitulasi</span>
+                            <i class="fa-solid fa-minus small text-muted"></i>
+                        </div>
+                        <ul class="subnav-list collapse show" id="boxRekap">
+                            <li class="{% if active_sub == 'periksa_Gizi Baik' %}active{% endif %}">
+                                <a href="{{ url_for('daftar_pemeriksaan', status='Gizi Baik') }}">
+                                    <span>3 Bulanan Anak (Gizi Baik)</span>
+                                    <span class="badge bg-success">{{ stats_global.gizi_baik }}</span>
+                                </a>
+                            </li>
+                            <li class="{% if active_sub == 'periksa_pantau' %}active{% endif %}">
+                                <a href="{{ url_for('daftar_pemeriksaan', status='pantau') }}">
+                                    <span>Perlu Pemantauan / PMT</span>
+                                    <span class="badge bg-warning text-dark">{{ stats_global.perlu_pantau }}</span>
+                                </a>
+                            </li>
+                            <li class="{% if active_sub == 'petugas' %}active{% endif %}">
+                                <a href="{{ url_for('daftar_petugas') }}">
+                                    <span>Data Kader Posyandu</span>
+                                    <span class="badge bg-info text-dark">{{ stats_global.petugas }}</span>
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <!-- Card 4: Scorecard Konvergensi -->
+                    <div class="subnav-box">
+                        <ul class="subnav-list">
+                            <li class="{% if active_sub == 'scorecard' %}active{% endif %}">
+                                <a href="{{ url_for('scorecard') }}">
+                                    <span>Scorecard Konvergensi</span>
+                                    <i class="fa-solid fa-chart-simple text-muted"></i>
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+
+                </div>
+
+                <!-- Right Main Box Column -->
+                <div class="col-lg-9 col-md-8">
+                    <div class="main-box">
+                        {% block content %}{% endblock %}
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Footer -->
+        <footer class="admin-footer d-flex justify-content-between flex-wrap">
+            <span><strong>&copy; {{ tahun_ini }} {{ config.APP_NAME }}</strong> &mdash; Sistem Informasi Posyandu &amp; Pemantauan Stunting.</span>
+            <span>Praktikum Pengembangan Aplikasi Web (Flask &amp; MySQL)</span>
+        </footer>
+
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    // Toggle sidebar
+    const btnToggle = document.getElementById('btnToggleSidebar');
+    const wrapper = document.getElementById('adminWrapper');
+    if (btnToggle && wrapper) {
+        btnToggle.addEventListener('click', () => {
+            wrapper.classList.toggle('sidebar-collapsed');
+        });
+    }
+
+    // Select-all checkbox helper
+    document.querySelectorAll('.check-all').forEach(master => {
+        master.addEventListener('change', () => {
+            document.querySelectorAll('.row-check').forEach(cb => {
+                cb.checked = master.checked;
+            });
+        });
+    });
+
+    // Live table filter + page size selector
+    const searchInput = document.getElementById('liveTableSearch');
+    const lengthSelect = document.getElementById('dtLengthSelect');
+    const tableRows = document.querySelectorAll('.table-posyandu tbody tr.data-row');
+
+    function applyTableFilter() {
+        if (!tableRows.length) return;
+        const term = (searchInput ? searchInput.value : '').toLowerCase();
+        const limit = lengthSelect ? parseInt(lengthSelect.value, 10) : 100;
+        let visibleCount = 0;
+
+        tableRows.forEach(row => {
+            const match = row.innerText.toLowerCase().includes(term);
+            if (match && visibleCount < limit) {
+                row.style.display = '';
+                visibleCount++;
+            } else {
+                row.style.display = 'none';
+            }
+        });
+        const infoEl = document.getElementById('dtShowingCount');
+        if (infoEl) infoEl.textContent = visibleCount;
+    }
+
+    if (searchInput) searchInput.addEventListener('input', applyTableFilter);
+    if (lengthSelect) lengthSelect.addEventListener('change', applyTableFilter);
+</script>
+</body>
+</html>

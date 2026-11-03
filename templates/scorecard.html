@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+{% block title %}Scorecard Konvergensi{% endblock %}
+{% block page_heading %}Scorecard Konvergensi{% endblock %}
+{% block page_subheading %}Rekapitulasi Stunting &amp; Gizi Posyandu{% endblock %}
+{% block breadcrumb %}Scorecard Konvergensi{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center pb-2 mb-3 border-bottom">
+    <h5 class="mb-0 fw-bold"><i class="fa-solid fa-clipboard-check text-info me-2"></i> Scorecard Konvergensi Layanan Posyandu</h5>
+    <span class="badge bg-success">Cakupan Pemantauan: 100% ({{ stats_global.pemeriksaan }}/{{ stats_global.balita }} Balita)</span>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-md-4">
+        <div class="p-3 border rounded bg-light">
+            <div class="text-muted small">Status Gizi Baik (Normal)</div>
+            <div class="fs-3 fw-bold text-success">{{ stats_global.gizi_baik }} Balita</div>
+            <div class="small text-muted">Tumbuh kembang sesuai grafik KMS</div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="p-3 border rounded bg-light">
+            <div class="text-muted small">Perlu Pemantauan / PMT</div>
+            <div class="fs-3 fw-bold text-warning">{{ stats_global.perlu_pantau }} Balita</div>
+            <div class="small text-muted">Gizi Kurang / Gizi Lebih</div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="p-3 border rounded bg-light">
+            <div class="text-muted small">Rasio Kader Posyandu</div>
+            <div class="fs-3 fw-bold text-primary">{{ stats_global.petugas }} Kader</div>
+            <div class="small text-muted">Melayani {{ stats_global.jadwal }} jadwal kegiatan</div>
+        </div>
+    </div>
+</div>
+
+<h6 class="fw-bold mb-2">Tabel Rekapitulasi Lengkap Pemeriksaan Balita</h6>
+<div class="table-responsive">
+    <table class="table-posyandu">
+        <thead>
+            <tr>
+                <th class="text-center">NO</th>
+                <th>NAMA BALITA</th>
+                <th>IBU (KIA)</th>
+                <th>POSYANDU</th>
+                <th>BB / TB</th>
+                <th>LK / LiLA</th>
+                <th>STATUS GIZI</th>
+                <th>KADER PEMERIKSA</th>
+                <th>CATATAN</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for r in rekap_periksa %}
+            <tr>
+                <td class="text-center">{{ loop.index }}</td>
+                <td class="fw-semibold">
+                    <a href="{{ url_for('detail_balita', id_balita=r.id_balita) }}" class="text-decoration-none">{{ r.nama_balita }}</a>
+                </td>
+                <td>{{ r.nama_ibu or '-' }}</td>
+                <td>{{ r.lokasi or '-' }}</td>
+                <td>{{ r.berat_badan }} kg / {{ r.tinggi_badan }} cm</td>
+                <td>{{ r.lingkar_kepala }} cm / {{ r.lingkar_lengan }} cm</td>
+                <td><span class="badge bg-{{ r.status_gizi | warna_gizi }}">{{ r.status_gizi }}</span></td>
+                <td>{{ r.nama_petugas or '-' }}</td>
+                <td>{{ r.catatan or '-' }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}
