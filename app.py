@@ -27,7 +27,6 @@ MENU = [
         ],
     },
     {"key": "petugas", "endpoint": "daftar_petugas", "label": "Kader Posyandu", "icon": "fa-user-nurse"},
-    {"key": "layanan", "endpoint": "halo", "params": {"nama": "Kader Posyandu"}, "label": "Layanan Posyandu", "icon": "fa-hand-holding-medical"},
 ]
 
 ANGGOTA_KELOMPOK = [
@@ -203,11 +202,6 @@ def scorecard():
         active_sub="scorecard",
     )
 
-
-@app.route("/halo/<nama>")
-def halo(nama):
-    """Contoh route dinamis sederhana yang menerima parameter pada URL."""
-    return render_template("halo.html", nama=nama)
 
 @app.route("/balita")
 def daftar_balita():

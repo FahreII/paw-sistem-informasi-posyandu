@@ -47,7 +47,7 @@
                 {% else %}
                 <!-- Menu Tunggal di-loop dari array MENU -->
                 <li class="{% if request.endpoint and (request.endpoint == item.endpoint or item.key in request.endpoint) %}active{% endif %}">
-                    <a href="{{ url_for(item.endpoint, **(item.params or {})) }}">
+                    <a href="{{ url_for(item.endpoint) }}">
                         <span><i class="fa-solid {{ item.icon }} menu-icon"></i> {{ item.label }}</span>
                     </a>
                 </li>
