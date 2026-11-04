@@ -32,7 +32,6 @@ MENU = [
     {"key": "tentang", "endpoint": "tentang", "label": "Tentang"},
 ]
 
-# Data 5 anggota kelompok sesuai data user di modulPAW
 ANGGOTA_KELOMPOK = [
     {"nama": "Asfiaaul Auliaa", "peran": "Ketua Kader", "no_hp": "082327373005"},
     {"nama": "Abitien Ahmad Fahrel", "peran": "Kader", "no_hp": "082317945481"},
@@ -216,12 +215,6 @@ def halo(nama):
     """Contoh route dinamis sederhana yang menerima parameter pada URL."""
     return render_template("halo.html", nama=nama)
 
-
-# ---------------------------------------------------------------------------
-# TAHAP 2 : Menampilkan Data dari Database (READ: Daftar & Detail + 404)
-# ---------------------------------------------------------------------------
-
-# ---------- BALITA ----------
 @app.route("/balita")
 def daftar_balita():
     q = request.args.get("q", "").strip()
@@ -230,7 +223,7 @@ def daftar_balita():
 
     sql = """
         SELECT b.id_balita, b.id_orang_tua, b.nama_balita, b.jenis_kelamin,
-               b.tanggal_lahir, o.nama_ibu, o.alamat
+            b.tanggal_lahir, o.nama_ibu, o.alamat
         FROM balita b
         LEFT JOIN orang_tua o ON b.id_orang_tua = o.id_orang_tua
         WHERE 1 = 1

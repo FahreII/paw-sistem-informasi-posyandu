@@ -556,17 +556,30 @@ body {
 }
 
 .dt-pagination span,
-.dt-pagination a {
+.dt-pagination a,
+.dt-pagination button {
     padding: 5px 12px;
     font-size: 12.5px;
-    color: #555;
+    color: #444;
     background: #fafafa;
     text-decoration: none;
+    border: none;
     border-right: 1px solid #ddd;
+    cursor: pointer;
+    user-select: none;
+    transition: background 0.12s, color 0.12s;
+}
+
+.dt-pagination span:hover:not(.active-page):not(.disabled-page),
+.dt-pagination a:hover:not(.active-page):not(.disabled-page),
+.dt-pagination button:hover:not(.active-page):not(.disabled-page) {
+    background-color: #eaeff5;
+    color: #222;
 }
 
 .dt-pagination span:last-child,
-.dt-pagination a:last-child {
+.dt-pagination a:last-child,
+.dt-pagination button:last-child {
     border-right: none;
 }
 
@@ -574,6 +587,13 @@ body {
     background-color: var(--accent-blue);
     color: #fff;
     font-weight: 600;
+    cursor: default;
+}
+
+.dt-pagination .disabled-page {
+    color: #aaa;
+    background: #f9f9f9;
+    cursor: not-allowed;
 }
 
 /* Badges & Detail boxes */

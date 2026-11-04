@@ -18,18 +18,8 @@
     <!-- ==================== LEFT DARK SIDEBAR ==================== -->
     <aside class="admin-sidebar">
         <a href="{{ url_for('beranda') }}" class="sidebar-brand">
-            <div class="brand-emblem">
-                <!-- Emblem Desa / Posyandu -->
-                <svg viewBox="0 0 48 54" width="38" height="42">
-                    <path d="M24 2 L44 10 V26 C44 39 35 48 24 52 C13 48 4 39 4 26 V10 Z"
-                          fill="#00a65a" stroke="#f39c12" stroke-width="3"/>
-                    <circle cx="24" cy="23" r="10" fill="#fff"/>
-                    <path d="M24 16 V30 M17 23 H31" stroke="#dd4b39" stroke-width="3.5" stroke-linecap="round"/>
-                </svg>
-            </div>
             <div class="brand-text-wrap">
                 <span class="brand-title">Posyandu Paguyuban</span>
-                <span class="brand-sub">RW 02 &amp; RW 03</span>
                 <span class="brand-sub">Sistem Informasi Posyandu</span>
             </div>
         </a>
@@ -302,32 +292,115 @@
         });
     });
 
-    // Live table filter + page size selector
+    // Live table filter + page size selector + interactive pagination
     const searchInput = document.getElementById('liveTableSearch');
     const lengthSelect = document.getElementById('dtLengthSelect');
-    const tableRows = document.querySelectorAll('.table-posyandu tbody tr.data-row');
+    const tableRows = Array.from(document.querySelectorAll('.table-posyandu tbody tr.data-row'));
+    const paginationContainer = document.querySelector('.dt-pagination');
+    const footerInfo = document.querySelector('.dt-footer-row > div:first-child');
+    let currentPage = 1;
 
-    function applyTableFilter() {
-        if (!tableRows.length) return;
-        const term = (searchInput ? searchInput.value : '').toLowerCase();
-        const limit = lengthSelect ? parseInt(lengthSelect.value, 10) : 100;
-        let visibleCount = 0;
+    function renderPagination(totalPages) {
+        if (!paginationContainer) return;
+        paginationContainer.innerHTML = '';
 
-        tableRows.forEach(row => {
-            const match = row.innerText.toLowerCase().includes(term);
-            if (match && visibleCount < limit) {
-                row.style.display = '';
-                visibleCount++;
+        // Tombol Sebelumnya
+        const prevBtn = document.createElement('button');
+        prevBtn.type = 'button';
+        prevBtn.textContent = 'Sebelumnya';
+        if (currentPage <= 1) {
+            prevBtn.className = 'disabled-page';
+            prevBtn.disabled = true;
+        } else {
+            prevBtn.addEventListener('click', () => {
+                currentPage--;
+                applyTableFilter();
+            });
+        }
+        paginationContainer.appendChild(prevBtn);
+
+        // Tombol Nomor Halaman (1, 2, 3, ...)
+        for (let p = 1; p <= totalPages; p++) {
+            const pageBtn = document.createElement('button');
+            pageBtn.type = 'button';
+            pageBtn.textContent = String(p);
+            if (p === currentPage) {
+                pageBtn.className = 'active-page';
             } else {
-                row.style.display = 'none';
+                pageBtn.addEventListener('click', () => {
+                    currentPage = p;
+                    applyTableFilter();
+                });
             }
-        });
-        const infoEl = document.getElementById('dtShowingCount');
-        if (infoEl) infoEl.textContent = visibleCount;
+            paginationContainer.appendChild(pageBtn);
+        }
+
+        // Tombol Selanjutnya
+        const nextBtn = document.createElement('button');
+        nextBtn.type = 'button';
+        nextBtn.textContent = 'Selanjutnya';
+        if (currentPage >= totalPages) {
+            nextBtn.className = 'disabled-page';
+            nextBtn.disabled = true;
+        } else {
+            nextBtn.addEventListener('click', () => {
+                currentPage++;
+                applyTableFilter();
+            });
+        }
+        paginationContainer.appendChild(nextBtn);
     }
 
-    if (searchInput) searchInput.addEventListener('input', applyTableFilter);
-    if (lengthSelect) lengthSelect.addEventListener('change', applyTableFilter);
+    function applyTableFilter() {
+        if (!tableRows.length) {
+            renderPagination(1);
+            return;
+        }
+        const term = (searchInput ? searchInput.value : '').trim().toLowerCase();
+        const pageSize = lengthSelect ? parseInt(lengthSelect.value, 10) : 10;
+
+        const matchedRows = tableRows.filter(row =>
+            row.innerText.toLowerCase().includes(term)
+        );
+        const totalMatched = matchedRows.length;
+        const totalPages = Math.max(1, Math.ceil(totalMatched / pageSize));
+        if (currentPage > totalPages) currentPage = totalPages;
+        if (currentPage < 1) currentPage = 1;
+
+        const startIdx = (currentPage - 1) * pageSize;
+        const endIdx = Math.min(startIdx + pageSize, totalMatched);
+
+        // Sembunyikan semua baris dulu, lalu tampilkan hanya baris di halaman aktif
+        tableRows.forEach(row => {
+            row.style.display = 'none';
+        });
+        matchedRows.slice(startIdx, endIdx).forEach(row => {
+            row.style.display = '';
+        });
+
+        if (footerInfo) {
+            const fromNum = totalMatched === 0 ? 0 : startIdx + 1;
+            footerInfo.innerHTML = `Menampilkan ${fromNum} sampai <span id="dtShowingCount">${endIdx}</span> dari ${totalMatched} entri`;
+        }
+
+        renderPagination(totalPages);
+    }
+
+    if (searchInput) {
+        searchInput.addEventListener('input', () => {
+            currentPage = 1;
+            applyTableFilter();
+        });
+    }
+    if (lengthSelect) {
+        lengthSelect.addEventListener('change', () => {
+            currentPage = 1;
+            applyTableFilter();
+        });
+    }
+
+    // Jalankan saat halaman pertama kali dibuka
+    applyTableFilter();
 </script>
 </body>
 </html>

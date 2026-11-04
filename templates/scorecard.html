@@ -35,6 +35,21 @@
 </div>
 
 <h6 class="fw-bold mb-2">Tabel Rekapitulasi Lengkap Pemeriksaan Balita</h6>
+<div class="dt-controls-row">
+    <div class="dt-length">
+        Tampilkan
+        <select id="dtLengthSelect">
+            <option value="10" selected>10</option>
+            <option value="25">25</option>
+            <option value="50">50</option>
+        </select>
+        entri
+    </div>
+    <div class="dt-search">
+        Cari:
+        <input type="text" id="liveTableSearch" placeholder="Cari balita / ibu / status...">
+    </div>
+</div>
 <div class="table-responsive">
     <table class="table-posyandu">
         <thead>
@@ -52,7 +67,7 @@
         </thead>
         <tbody>
             {% for r in rekap_periksa %}
-            <tr>
+            <tr class="data-row">
                 <td class="text-center">{{ loop.index }}</td>
                 <td class="fw-semibold">
                     <a href="{{ url_for('detail_balita', id_balita=r.id_balita) }}" class="text-decoration-none">{{ r.nama_balita }}</a>
@@ -68,5 +83,15 @@
             {% endfor %}
         </tbody>
     </table>
+</div>
+<div class="dt-footer-row">
+    <div>
+        Menampilkan 1 sampai <span id="dtShowingCount">{{ rekap_periksa | length }}</span> dari {{ rekap_periksa | length }} entri
+    </div>
+    <div class="dt-pagination">
+        <span>Sebelumnya</span>
+        <span class="active-page">1</span>
+        <span>Selanjutnya</span>
+    </div>
 </div>
 {% endblock %}
