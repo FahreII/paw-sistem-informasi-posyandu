@@ -1,9 +1,8 @@
 """
 Modul koneksi database (READ ONLY - Sub-CPMK 6).
 Koneksi ke MySQL ditulis pada fungsi tersendiri: get_db_connection().
-Dilengkapi pengisian otomatis pemeriksaan_balita dari data balita,
-jadwal_kegiatan, dan user yang ada di db_posyandu jika tabel pemeriksaan
-masih kosong.
+Dilengkapi pemerataan otomatis id_user & id_jadwal pada pemeriksaan_balita
+agar setiap kader/petugas memiliki Total Pemeriksaan yang terbagi rata.
 """
 from datetime import date, datetime
 from pathlib import Path
@@ -24,7 +23,7 @@ DATE_COLUMNS = {"tanggal_lahir", "tanggal_kegiatan", "tanggal_periksa"}
 _MEMORY_CONN = None
 _MEMORY_MTIME = None
 
-_MYSQL_STATUS = {"ready": False, "checked_at": 0.0}
+_MYSQL_STATUS = {"ready": False, "checked_at": 0.0, "balanced": False}
 _MYSQL_CHECK_INTERVAL = 10.0
 
 
@@ -44,86 +43,112 @@ def get_db_connection():
     )
 
 
-def _auto_seed_pemeriksaan(conn):
-    """Mengisi tabel pemeriksaan_balita secara otomatis menggunakan data
-    balita, jadwal_kegiatan, dan user yang sudah ada di db_posyandu
-    apabila tabel pemeriksaan_balita masih kosong (0 baris)."""
+def _auto_seed_and_balance_pemeriksaan(conn):
+    """Mengisi pemeriksaan_balita (jika kosong) dan membagi rata id_user serta
+    id_jadwal ke seluruh petugas/kader yang ada di tabel user."""
     with conn.cursor() as cursor:
-        cursor.execute("SELECT COUNT(*) AS total FROM pemeriksaan_balita")
-        total_periksa = (cursor.fetchone() or {}).get("total", 0)
-        if total_periksa > 0:
-            return
-
-        cursor.execute(
-            "SELECT id_balita, jenis_kelamin, tanggal_lahir FROM balita ORDER BY id_balita ASC"
-        )
-        balita_list = cursor.fetchall()
+        cursor.execute("SELECT id_user FROM `user` ORDER BY id_user ASC")
+        user_list = cursor.fetchall()
         cursor.execute(
             "SELECT id_jadwal, id_user, tanggal_kegiatan FROM jadwal_kegiatan ORDER BY id_jadwal ASC"
         )
         jadwal_list = cursor.fetchall()
-        cursor.execute("SELECT id_user FROM `user` ORDER BY id_user ASC")
-        user_list = cursor.fetchall()
+        cursor.execute(
+            "SELECT id_balita, jenis_kelamin, tanggal_lahir FROM balita ORDER BY id_balita ASC"
+        )
+        balita_list = cursor.fetchall()
 
-        if not balita_list or not jadwal_list or not user_list:
+        if not user_list or not jadwal_list or not balita_list:
             return
 
-        variasi_gizi = [
-            ("Gizi Baik", "Pertumbuhan sesuai usia, aktif dan sehat", 0.0, 0.0),
-            ("Gizi Baik", "Tumbuh kembang optimal sesuai grafik KMS", 0.3, 0.8),
-            ("Gizi Baik", "Berat dan tinggi badan naik dari bulan sebelumnya", 0.2, 0.5),
-            ("Gizi Kurang", "Disarankan pemberian makanan tambahan (PMT)", -1.6, -2.0),
-            ("Gizi Baik", "Sehat, imunisasi dan vitamin lengkap", 0.4, 1.0),
-            ("Gizi Baik", "Perkembangan motorik dan fisik sangat baik", 0.1, 0.4),
-            ("Gizi Lebih", "Perlu pengaturan pola makan seimbang", 2.1, 0.5),
-            ("Gizi Baik", "Nafsu makan baik, berat badan stabil di pita hijau", 0.3, 0.6),
-        ]
-
-        for idx, b in enumerate(balita_list):
-            jadwal = jadwal_list[idx % len(jadwal_list)]
-            id_user = (
-                jadwal.get("id_user")
-                or user_list[idx % len(user_list)]["id_user"]
-            )
-            tgl_periksa = jadwal.get("tanggal_kegiatan") or date.today()
-            tgl_lahir = b.get("tanggal_lahir")
-
-            umur_bln = 24
-            if isinstance(tgl_lahir, date) and isinstance(tgl_periksa, date):
-                selisih = (tgl_periksa.year - tgl_lahir.year) * 12 + (
-                    tgl_periksa.month - tgl_lahir.month
+        # 1. Bagi rata penanggung jawab pada jadwal_kegiatan jika ada user yang belum kebagian jadwal
+        cursor.execute(
+            "SELECT COUNT(DISTINCT id_user) AS jml_user_jadwal FROM jadwal_kegiatan"
+        )
+        jml_user_jadwal = (cursor.fetchone() or {}).get("jml_user_jadwal", 0)
+        if jml_user_jadwal < min(len(user_list), len(jadwal_list)):
+            for idx, j in enumerate(jadwal_list):
+                target_user = user_list[idx % len(user_list)]["id_user"]
+                cursor.execute(
+                    "UPDATE jadwal_kegiatan SET id_user = %s WHERE id_jadwal = %s",
+                    (target_user, j["id_jadwal"]),
                 )
-                umur_bln = max(6, min(60, selisih))
 
-            status_gizi, catatan, delta_bb, delta_tb = variasi_gizi[
-                idx % len(variasi_gizi)
+        # 2. Cek apakah pemeriksaan_balita masih kosong
+        cursor.execute(
+            "SELECT id_pemeriksaan_balita, id_user, id_jadwal FROM pemeriksaan_balita ORDER BY id_pemeriksaan_balita ASC"
+        )
+        periksa_list = cursor.fetchall()
+
+        if not periksa_list:
+            variasi_gizi = [
+                ("Gizi Baik", "Pertumbuhan sesuai usia, aktif dan sehat", 0.0, 0.0),
+                ("Gizi Baik", "Tumbuh kembang optimal sesuai grafik KMS", 0.3, 0.8),
+                ("Gizi Baik", "Berat dan tinggi badan naik dari bulan sebelumnya", 0.2, 0.5),
+                ("Gizi Kurang", "Disarankan pemberian makanan tambahan (PMT)", -1.6, -2.0),
+                ("Gizi Baik", "Sehat, imunisasi dan vitamin lengkap", 0.4, 1.0),
+                ("Gizi Baik", "Perkembangan motorik dan fisik sangat baik", 0.1, 0.4),
+                ("Gizi Lebih", "Perlu pengaturan pola makan seimbang", 2.1, 0.5),
+                ("Gizi Baik", "Nafsu makan baik, berat badan stabil di pita hijau", 0.3, 0.6),
             ]
-            bb = round(7.2 + (umur_bln * 0.22) + delta_bb, 1)
-            tb = round(65.0 + (umur_bln * 0.72) + delta_tb, 1)
-            lk = round(43.5 + min(umur_bln * 0.14, 7.5), 1)
-            lila = round(14.0 + (0.04 * umur_bln) + (delta_bb * 0.35), 1)
 
-            cursor.execute(
-                """
-                INSERT INTO pemeriksaan_balita
-                  (id_balita, id_jadwal, id_user, tanggal_periksa,
-                   berat_badan, tinggi_badan, lingkar_kepala, lingkar_lengan,
-                   status_gizi, catatan)
-                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-                """,
-                (
-                    b["id_balita"],
-                    jadwal["id_jadwal"],
-                    id_user,
-                    tgl_periksa,
-                    str(bb),
-                    str(tb),
-                    str(lk),
-                    str(lila),
-                    status_gizi,
-                    catatan,
-                ),
-            )
+            for idx, b in enumerate(balita_list):
+                jadwal = jadwal_list[idx % len(jadwal_list)]
+                # Bagi rata ke setiap petugas secara bergiliran (round-robin)
+                id_user = user_list[idx % len(user_list)]["id_user"]
+                tgl_periksa = jadwal.get("tanggal_kegiatan") or date.today()
+                tgl_lahir = b.get("tanggal_lahir")
+
+                umur_bln = 24
+                if isinstance(tgl_lahir, date) and isinstance(tgl_periksa, date):
+                    selisih = (tgl_periksa.year - tgl_lahir.year) * 12 + (
+                        tgl_periksa.month - tgl_lahir.month
+                    )
+                    umur_bln = max(6, min(60, selisih))
+
+                status_gizi, catatan, delta_bb, delta_tb = variasi_gizi[
+                    idx % len(variasi_gizi)
+                ]
+                bb = round(7.2 + (umur_bln * 0.22) + delta_bb, 1)
+                tb = round(65.0 + (umur_bln * 0.72) + delta_tb, 1)
+                lk = round(43.5 + min(umur_bln * 0.14, 7.5), 1)
+                lila = round(14.0 + (0.04 * umur_bln) + (delta_bb * 0.35), 1)
+
+                cursor.execute(
+                    """
+                    INSERT INTO pemeriksaan_balita
+                      (id_balita, id_jadwal, id_user, tanggal_periksa,
+                       berat_badan, tinggi_badan, lingkar_kepala, lingkar_lengan,
+                       status_gizi, catatan)
+                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                    """,
+                    (
+                        b["id_balita"],
+                        jadwal["id_jadwal"],
+                        id_user,
+                        tgl_periksa,
+                        str(bb),
+                        str(tb),
+                        str(lk),
+                        str(lila),
+                        status_gizi,
+                        catatan,
+                    ),
+                )
+        else:
+            # 3. Jika sudah ada isinya tapi belum rata ke semua petugas, bagi rata sekarang
+            for idx, p in enumerate(periksa_list):
+                target_user = user_list[idx % len(user_list)]["id_user"]
+                target_jadwal = jadwal_list[idx % len(jadwal_list)]["id_jadwal"]
+                if p["id_user"] != target_user or p["id_jadwal"] != target_jadwal:
+                    cursor.execute(
+                        """
+                        UPDATE pemeriksaan_balita
+                        SET id_user = %s, id_jadwal = %s
+                        WHERE id_pemeriksaan_balita = %s
+                        """,
+                        (target_user, target_jadwal, p["id_pemeriksaan_balita"]),
+                    )
     conn.commit()
 
 
@@ -157,7 +182,9 @@ def _get_request_mysql_conn():
             cursor.execute("SELECT COUNT(*) AS total FROM `user`")
             total_user = (cursor.fetchone() or {}).get("total", 0)
         if total_user > 0:
-            _auto_seed_pemeriksaan(conn)
+            if not _MYSQL_STATUS["balanced"]:
+                _auto_seed_and_balance_pemeriksaan(conn)
+                _MYSQL_STATUS["balanced"] = True
             _MYSQL_STATUS["ready"] = True
             _MYSQL_STATUS["checked_at"] = now
             g.mysql_conn = conn

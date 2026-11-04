@@ -25,69 +25,34 @@
         </a>
 
         <div class="sidebar-section-header">MENU UTAMA</div>
-
         <ul class="sidebar-menu">
-            <li class="{% if request.endpoint == 'beranda' %}active{% endif %}">
-                <a href="{{ url_for('beranda') }}">
-                    <span><i class="fa-solid fa-house menu-icon"></i> Home</span>
-                </a>
-            </li>
-            <li class="{% if request.endpoint == 'tentang' %}active{% endif %}">
-                <a href="{{ url_for('tentang') }}">
-                    <span><i class="fa-solid fa-circle-info menu-icon"></i> Info Posyandu</span>
-                </a>
-            </li>
-            <li class="{% if request.endpoint and 'orang_tua' in request.endpoint %}active{% endif %}">
-                <a href="{{ url_for('daftar_orang_tua') }}">
-                    <span><i class="fa-solid fa-people-roof menu-icon"></i> Kependudukan (KIA)</span>
-                </a>
-            </li>
-            <li class="{% if request.endpoint == 'scorecard' %}active{% endif %}">
-                <a href="{{ url_for('scorecard') }}">
-                    <span><i class="fa-solid fa-chart-line menu-icon"></i> Statistik &amp; Rekap</span>
-                </a>
-            </li>
-
-            <!-- Menu Kesehatan (Expanded) -->
-            <li class="active">
-                <a href="#submenuKesehatan" data-bs-toggle="collapse" aria-expanded="true">
-                    <span><i class="fa-solid fa-heart-pulse menu-icon" style="color:#00c0ef;"></i> Kesehatan</span>
-                    <i class="fa-solid fa-angle-down small"></i>
-                </a>
-                <ul class="sidebar-submenu collapse show" id="submenuKesehatan">
-                    <li class="{% if request.endpoint and 'balita' in request.endpoint %}active{% endif %}">
-                        <a href="{{ url_for('daftar_balita') }}">
-                            <i class="fa-solid fa-child-reaching menu-icon"></i> Pendataan Balita
-                        </a>
-                    </li>
-                    <li class="{% if request.endpoint and 'pemeriksaan' in request.endpoint %}active{% endif %}">
-                        <a href="{{ url_for('daftar_pemeriksaan') }}">
-                            <i class="fa-solid fa-check menu-icon"></i> Pemantauan Gizi
-                        </a>
-                    </li>
-                    <li class="{% if request.endpoint and 'jadwal' in request.endpoint %}active{% endif %}">
-                        <a href="{{ url_for('daftar_jadwal') }}">
-                            <i class="fa-solid fa-notes-medical menu-icon"></i> Vaksin &amp; Jadwal
-                        </a>
-                    </li>
-                    <li class="{% if request.endpoint == 'beranda' %}active{% endif %}">
-                        <a href="{{ url_for('beranda') }}">
-                            <i class="fa-solid fa-stethoscope menu-icon"></i> Stunting &amp; Posyandu
-                        </a>
-                    </li>
-                </ul>
-            </li>
-
-            <li class="{% if request.endpoint and 'petugas' in request.endpoint %}active{% endif %}">
-                <a href="{{ url_for('daftar_petugas') }}">
-                    <span><i class="fa-solid fa-user-nurse menu-icon"></i> Kader Posyandu</span>
-                </a>
-            </li>
-            <li>
-                <a href="{{ url_for('halo', nama='Kader Posyandu') }}">
-                    <span><i class="fa-solid fa-hand-holding-medical menu-icon"></i> Layanan Posyandu</span>
-                </a>
-            </li>
+            {% for item in menu %}
+                {% if item.children %}
+                <!-- Menu Dropdown (Kesehatan) di-loop dari array children -->
+                <li class="active">
+                    <a href="#submenu-{{ item.key }}" data-bs-toggle="collapse" aria-expanded="true">
+                        <span><i class="fa-solid {{ item.icon }} menu-icon" style="color:#00c0ef;"></i> {{ item.label }}</span>
+                        <i class="fa-solid fa-angle-down small"></i>
+                    </a>
+                    <ul class="sidebar-submenu collapse show" id="submenu-{{ item.key }}">
+                        {% for sub in item.children %}
+                        <li class="{% if request.endpoint and (request.endpoint == sub.endpoint or sub.key in request.endpoint) %}active{% endif %}">
+                            <a href="{{ url_for(sub.endpoint) }}">
+                                <i class="fa-solid {{ sub.icon }} menu-icon"></i> {{ sub.label }}
+                            </a>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                </li>
+                {% else %}
+                <!-- Menu Tunggal di-loop dari array MENU -->
+                <li class="{% if request.endpoint and (request.endpoint == item.endpoint or item.key in request.endpoint) %}active{% endif %}">
+                    <a href="{{ url_for(item.endpoint, **(item.params or {})) }}">
+                        <span><i class="fa-solid {{ item.icon }} menu-icon"></i> {{ item.label }}</span>
+                    </a>
+                </li>
+                {% endif %}
+            {% endfor %}
         </ul>
     </aside>
 
@@ -266,7 +231,6 @@
         <!-- Footer -->
         <footer class="admin-footer d-flex justify-content-between flex-wrap">
             <span><strong>&copy; {{ tahun_ini }} {{ config.APP_NAME }}</strong> &mdash; Sistem Informasi Posyandu &amp; Pemantauan Stunting.</span>
-            <span>Praktikum Pengembangan Aplikasi Web (Flask &amp; MySQL)</span>
         </footer>
 
     </div>
@@ -292,8 +256,7 @@
         });
     });
 
-    // Live table filter + page size selector + interactive pagination
-    const searchInput = document.getElementById('liveTableSearch');
+    // Page size selector + interactive pagination
     const lengthSelect = document.getElementById('dtLengthSelect');
     const tableRows = Array.from(document.querySelectorAll('.table-posyandu tbody tr.data-row'));
     const paginationContainer = document.querySelector('.dt-pagination');
@@ -356,42 +319,28 @@
             renderPagination(1);
             return;
         }
-        const term = (searchInput ? searchInput.value : '').trim().toLowerCase();
         const pageSize = lengthSelect ? parseInt(lengthSelect.value, 10) : 10;
-
-        const matchedRows = tableRows.filter(row =>
-            row.innerText.toLowerCase().includes(term)
-        );
-        const totalMatched = matchedRows.length;
-        const totalPages = Math.max(1, Math.ceil(totalMatched / pageSize));
+        const totalRows = tableRows.length;
+        const totalPages = Math.max(1, Math.ceil(totalRows / pageSize));
         if (currentPage > totalPages) currentPage = totalPages;
         if (currentPage < 1) currentPage = 1;
 
         const startIdx = (currentPage - 1) * pageSize;
-        const endIdx = Math.min(startIdx + pageSize, totalMatched);
+        const endIdx = Math.min(startIdx + pageSize, totalRows);
 
         // Sembunyikan semua baris dulu, lalu tampilkan hanya baris di halaman aktif
-        tableRows.forEach(row => {
-            row.style.display = 'none';
-        });
-        matchedRows.slice(startIdx, endIdx).forEach(row => {
-            row.style.display = '';
+        tableRows.forEach((row, idx) => {
+            row.style.display = (idx >= startIdx && idx < endIdx) ? '' : 'none';
         });
 
         if (footerInfo) {
-            const fromNum = totalMatched === 0 ? 0 : startIdx + 1;
-            footerInfo.innerHTML = `Menampilkan ${fromNum} sampai <span id="dtShowingCount">${endIdx}</span> dari ${totalMatched} entri`;
+            const fromNum = totalRows === 0 ? 0 : startIdx + 1;
+            footerInfo.innerHTML = `Menampilkan ${fromNum} sampai <span id="dtShowingCount">${endIdx}</span> dari ${totalRows} entri`;
         }
 
         renderPagination(totalPages);
     }
 
-    if (searchInput) {
-        searchInput.addEventListener('input', () => {
-            currentPage = 1;
-            applyTableFilter();
-        });
-    }
     if (lengthSelect) {
         lengthSelect.addEventListener('change', () => {
             currentPage = 1;

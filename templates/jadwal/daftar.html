@@ -7,12 +7,9 @@
 {% block content %}
 <div class="main-box-toolbar justify-content-between">
     <h6 class="mb-0 fw-bold"><i class="fa-solid fa-calendar-check text-info me-2"></i> Jadwal Kegiatan Posyandu</h6>
-    {% if q %}
-    <a href="{{ url_for('daftar_jadwal') }}" class="btn btn-sm btn-outline-secondary">Reset Pencarian</a>
-    {% endif %}
 </div>
 
-<form method="get" class="dt-controls-row">
+<div class="dt-controls-row">
     <div class="dt-length">
         Tampilkan
         <select id="dtLengthSelect">
@@ -22,11 +19,7 @@
         </select>
         entri
     </div>
-    <div class="dt-search">
-        Cari:
-        <input type="text" name="q" id="liveTableSearch" value="{{ q }}" placeholder="Cari lokasi / kegiatan...">
-    </div>
-</form>
+</div>
 
 <div class="table-responsive">
     <table class="table-posyandu">

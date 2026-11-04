@@ -1,10 +1,3 @@
-"""
-Aplikasi Web Sistem Informasi Posyandu & Pemantauan Stunting Balita
-Tugas Praktikum Pengembangan Aplikasi Web (Flask)
-
-Tahap 1 : instalasi, konfigurasi, route, template Jinja2, static CSS
-Tahap 2 : menampilkan data dari database (READ: daftar, detail, pencarian & filter)
-"""
 from datetime import date
 
 import pymysql
@@ -13,23 +6,28 @@ from flask import Flask, abort, render_template, request
 from config import Config
 from db import close_request_db, query_all, query_one
 
-# ---------------------------------------------------------------------------
-# Inisialisasi & konfigurasi aplikasi (app.config)
-# ---------------------------------------------------------------------------
 app = Flask(__name__)
 app.config.from_object(Config)
 app.teardown_appcontext(close_request_db)
 
-# Menu navigasi utama
 MENU = [
-    {"key": "beranda", "endpoint": "beranda", "label": "Posyandu"},
-    {"key": "balita", "endpoint": "daftar_balita", "label": "Pendataan Balita"},
-    {"key": "orang_tua", "endpoint": "daftar_orang_tua", "label": "Orang Tua (KIA)"},
-    {"key": "pemeriksaan", "endpoint": "daftar_pemeriksaan", "label": "Pemantauan Gizi"},
-    {"key": "jadwal", "endpoint": "daftar_jadwal", "label": "Jadwal & Vaksin"},
-    {"key": "petugas", "endpoint": "daftar_petugas", "label": "Petugas / Kader"},
-    {"key": "scorecard", "endpoint": "scorecard", "label": "Scorecard Konvergensi"},
-    {"key": "tentang", "endpoint": "tentang", "label": "Tentang"},
+    {"key": "beranda", "endpoint": "beranda", "label": "Home", "icon": "fa-house"},
+    {"key": "tentang", "endpoint": "tentang", "label": "Info Posyandu", "icon": "fa-circle-info"},
+    {"key": "orang_tua", "endpoint": "daftar_orang_tua", "label": "Kependudukan (KIA)", "icon": "fa-people-roof"},
+    {"key": "scorecard", "endpoint": "scorecard", "label": "Statistik & Rekap", "icon": "fa-chart-line"},
+    {
+        "key": "kesehatan",
+        "label": "Kesehatan",
+        "icon": "fa-heart-pulse",
+        "children": [
+            {"key": "balita", "endpoint": "daftar_balita", "label": "Pendataan Balita", "icon": "fa-child-reaching"},
+            {"key": "pemeriksaan", "endpoint": "daftar_pemeriksaan", "label": "Pemantauan Gizi", "icon": "fa-check"},
+            {"key": "jadwal", "endpoint": "daftar_jadwal", "label": "Vaksin & Jadwal", "icon": "fa-notes-medical"},
+            {"key": "beranda", "endpoint": "beranda", "label": "Stunting & Posyandu", "icon": "fa-stethoscope"},
+        ],
+    },
+    {"key": "petugas", "endpoint": "daftar_petugas", "label": "Kader Posyandu", "icon": "fa-user-nurse"},
+    {"key": "layanan", "endpoint": "halo", "params": {"nama": "Kader Posyandu"}, "label": "Layanan Posyandu", "icon": "fa-hand-holding-medical"},
 ]
 
 ANGGOTA_KELOMPOK = [
@@ -87,10 +85,6 @@ def inject_global():
         "stats_global": ambil_statistik(),
     }
 
-
-# ---------------------------------------------------------------------------
-# Filter Jinja2 kustom
-# ---------------------------------------------------------------------------
 @app.template_filter("tanggal")
 def format_tanggal(value):
     """Mengubah objek date menjadi format '17 Agustus 2024'."""
@@ -443,12 +437,18 @@ def detail_jadwal(id_jadwal):
 def daftar_petugas():
     q = request.args.get("q", "").strip()
 
-    sql = "SELECT id_user, nama, username, peran, no_hp FROM `user` WHERE 1 = 1"
+    sql = """
+        SELECT u.id_user, u.nama, u.username, u.peran, u.no_hp,
+               COUNT(p.id_pemeriksaan_balita) AS total_periksa
+        FROM `user` u
+        LEFT JOIN pemeriksaan_balita p ON p.id_user = u.id_user
+        WHERE 1 = 1
+    """
     params = []
     if q:
-        sql += " AND (nama LIKE %s OR peran LIKE %s OR username LIKE %s)"
+        sql += " AND (u.nama LIKE %s OR u.peran LIKE %s OR u.username LIKE %s)"
         params += [f"%{q}%", f"%{q}%", f"%{q}%"]
-    sql += " ORDER BY id_user ASC"
+    sql += " GROUP BY u.id_user ORDER BY u.id_user ASC"
 
     data = query_all(sql, params)
     return render_template("petugas/daftar.html", data=data, q=q, active_sub="petugas")
@@ -467,15 +467,23 @@ def detail_petugas(id_user):
         "SELECT * FROM jadwal_kegiatan WHERE id_user = %s ORDER BY tanggal_kegiatan DESC",
         (id_user,),
     )
-    jumlah_periksa = query_one(
-        "SELECT COUNT(*) AS total FROM pemeriksaan_balita WHERE id_user = %s",
+    pemeriksaan = query_all(
+        """
+        SELECT p.*, b.nama_balita, j.lokasi
+        FROM pemeriksaan_balita p
+        JOIN balita b ON b.id_balita = p.id_balita
+        LEFT JOIN jadwal_kegiatan j ON j.id_jadwal = p.id_jadwal
+        WHERE p.id_user = %s
+        ORDER BY p.tanggal_periksa DESC, p.id_pemeriksaan_balita ASC
+        """,
         (id_user,),
     )
     return render_template(
         "petugas/detail.html",
         petugas=petugas,
         jadwal=jadwal,
-        jumlah_periksa=(jumlah_periksa or {}).get("total", 0),
+        pemeriksaan=pemeriksaan,
+        jumlah_periksa=len(pemeriksaan),
         active_sub="petugas",
     )
 

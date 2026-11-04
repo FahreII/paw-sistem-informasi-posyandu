@@ -7,12 +7,9 @@
 {% block content %}
 <div class="main-box-toolbar justify-content-between">
     <h6 class="mb-0 fw-bold"><i class="fa-solid fa-user-nurse text-info me-2"></i> Daftar Petugas / Kader Posyandu</h6>
-    {% if q %}
-    <a href="{{ url_for('daftar_petugas') }}" class="btn btn-sm btn-outline-secondary">Reset Pencarian</a>
-    {% endif %}
 </div>
 
-<form method="get" class="dt-controls-row">
+<div class="dt-controls-row">
     <div class="dt-length">
         Tampilkan
         <select id="dtLengthSelect">
@@ -22,11 +19,7 @@
         </select>
         entri
     </div>
-    <div class="dt-search">
-        Cari:
-        <input type="text" name="q" id="liveTableSearch" value="{{ q }}" placeholder="Cari nama / peran kader...">
-    </div>
-</form>
+</div>
 
 <div class="table-responsive">
     <table class="table-posyandu">
@@ -38,6 +31,7 @@
                 <th>USERNAME <i class="fa-solid fa-sort sort-icon"></i></th>
                 <th>PERAN JABATAN <i class="fa-solid fa-sort sort-icon"></i></th>
                 <th>NO. HP <i class="fa-solid fa-sort sort-icon"></i></th>
+                <th class="text-center">TOTAL PEMERIKSAAN</th>
             </tr>
         </thead>
         <tbody>
@@ -59,10 +53,11 @@
                     {% endif %}
                 </td>
                 <td>{{ u.no_hp or '-' }}</td>
+                <td class="text-center"><span class="badge bg-success">{{ u.total_periksa }} Kali</span></td>
             </tr>
             {% else %}
             <tr>
-                <td colspan="6" class="text-center text-muted py-4">Belum ada data petugas.</td>
+                <td colspan="7" class="text-center text-muted py-4">Belum ada data petugas.</td>
             </tr>
             {% endfor %}
         </tbody>
